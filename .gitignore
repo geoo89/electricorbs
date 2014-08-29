@@ -1,0 +1,11 @@
+# .gitignore for everybody
+# If you wish to exclude files that only you have, use .git/info/exclude
+# instead of this file, which will affect all users and is versioned.
+
+# exclude all object files due to compiling code,
+# also all binaries, including Windows ones
+obj/*
+deps/*
+bin/*
+*.layout
+*.depend
