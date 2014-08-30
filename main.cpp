@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_image.h"
 
 #define WINDOW_WIDTH    640
 #define WINDOW_HEIGHT   480
@@ -28,11 +29,12 @@
 #define MAX_SPEED       1
 
 static SDL_Texture *spr_orb;
-static SDL_Texture *mask_red;
-static SDL_Texture *mask_blue;
+static SDL_Texture *spr_orb_red;
+static SDL_Texture *spr_orb_blue;
 static SDL_Rect positions[NUM_SPRITES];
 static SDL_Rect velocities[NUM_SPRITES];
-static int sprite_w, sprite_h;
+//TODO: figure how to get these dynamically
+static int sprite_w = 32, sprite_h = 32;
 
 
 struct point {
@@ -153,13 +155,13 @@ public:
 
         // now draw the overlay to shade orb red/blue
         if (charge > 0) {
-            SDL_SetTextureAlphaMod(mask_red, 2*charge);
-            SDL_RenderCopy(renderer, mask_red, NULL, &position);
+            SDL_SetTextureAlphaMod(spr_orb_red, 2*charge);
+            SDL_RenderCopy(renderer, spr_orb_red, NULL, &position);
         } else {
-            SDL_SetTextureAlphaMod(mask_blue, -2*charge);
-            SDL_RenderCopy(renderer, mask_blue, NULL, &position);
+            SDL_SetTextureAlphaMod(spr_orb_blue, -2*charge);
+            SDL_RenderCopy(renderer, spr_orb_blue, NULL, &position);
         }
-        //SDL_RenderCopy(renderer, mask_red, NULL, &position);
+        //SDL_RenderCopy(renderer, spr_orb_red, NULL, &position);
     }
 
     point dist(orb orb2) {
@@ -212,56 +214,6 @@ DrawChessBoard(SDL_Renderer * renderer)
     }
 }
 
-SDL_Texture*
-LoadSprite(char *file, SDL_Renderer *renderer)
-{
-    SDL_Surface *temp;
-    SDL_Texture *sprite = NULL;
-
-    /* Load the sprite image */
-    temp = SDL_LoadBMP(file);
-    if (temp == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s\n", file, SDL_GetError());
-        return NULL;
-    }
-    sprite_w = temp->w;
-    sprite_h = temp->h;
-
-    /* Set transparent pixel as the pixel at (0,0) */
-    if (temp->format->palette) {
-        SDL_SetColorKey(temp, SDL_TRUE, *(Uint8 *) temp->pixels);
-    } else {
-        switch (temp->format->BitsPerPixel) {
-        case 15:
-            SDL_SetColorKey(temp, SDL_TRUE,
-                            (*(Uint16 *) temp->pixels) & 0x00007FFF);
-            break;
-        case 16:
-            SDL_SetColorKey(temp, SDL_TRUE, *(Uint16 *) temp->pixels);
-            break;
-        case 24:
-            SDL_SetColorKey(temp, SDL_TRUE,
-                            (*(Uint32 *) temp->pixels) & 0x00FFFFFF);
-            break;
-        case 32:
-            SDL_SetColorKey(temp, SDL_TRUE, *(Uint32 *) temp->pixels);
-            break;
-        }
-    }
-
-    /* Create textures from the image */
-    sprite = SDL_CreateTextureFromSurface(renderer, temp);
-    if (!sprite) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
-        SDL_FreeSurface(temp);
-        return NULL;
-    }
-    SDL_FreeSurface(temp);
-
-    /* We're ready to roll. :) */
-    return sprite;
-}
-
 
 int
 main(int argc, char *argv[])
@@ -278,13 +230,13 @@ main(int argc, char *argv[])
         quit(2);
     }
 
-    if ((spr_orb = LoadSprite("gfx/orb.bmp", renderer)) == NULL) {
+    if (!(spr_orb = IMG_LoadTexture(renderer, "gfx/orb.png"))) {
         quit(2);
     }
-    if ((mask_red = LoadSprite("gfx/orb_red.bmp", renderer)) == NULL) {
+    if (!(spr_orb_red = IMG_LoadTexture(renderer, "gfx/orb_red.png"))) {
         quit(2);
     }
-    if ((mask_blue = LoadSprite("gfx/orb_blue.bmp", renderer)) == NULL) {
+    if (!(spr_orb_blue = IMG_LoadTexture(renderer, "gfx/orb_blue.png"))) {
         quit(2);
     }
 
