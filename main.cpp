@@ -27,7 +27,9 @@
 #define NUM_SPRITES     10
 #define MAX_SPEED       1
 
-static SDL_Texture *sprite;
+static SDL_Texture *spr_orb;
+static SDL_Texture *mask_red;
+static SDL_Texture *mask_blue;
 static SDL_Rect positions[NUM_SPRITES];
 static SDL_Rect velocities[NUM_SPRITES];
 static int sprite_w, sprite_h;
@@ -147,20 +149,17 @@ public:
         position.y = (int) (pos.y - sprite_h/2 + 0.5);
 
         // draw main orb
-        if (charge > 0) {
-            SDL_SetTextureColorMod(sprite, 0xDF + charge/4, 0xDF - 3*charge/2, 0xDF - 3*charge/2);
-        } else {
-            SDL_SetTextureColorMod(sprite, 0xDF + 3*charge/2, 0xDF + 3*charge/2, 0xDF - charge/4);
-        }
-        SDL_RenderCopy(renderer, sprite, NULL, &position);
+        SDL_RenderCopy(renderer, spr_orb, NULL, &position);
 
         // now draw the overlay to shade orb red/blue
-        /* if (charge > 0) {
-            SDL_SetRenderDrawColor(renderer, 0xFF, 0, 0,  charge);
+        if (charge > 0) {
+            SDL_SetTextureAlphaMod(mask_red, 2*charge);
+            SDL_RenderCopy(renderer, mask_red, NULL, &position);
         } else {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0xFF, -charge);
+            SDL_SetTextureAlphaMod(mask_blue, -2*charge);
+            SDL_RenderCopy(renderer, mask_blue, NULL, &position);
         }
-        SDL_RenderFillRect(renderer, &position); */
+        //SDL_RenderCopy(renderer, mask_red, NULL, &position);
     }
 
     point dist(orb orb2) {
@@ -213,16 +212,17 @@ DrawChessBoard(SDL_Renderer * renderer)
     }
 }
 
-int
+SDL_Texture*
 LoadSprite(char *file, SDL_Renderer *renderer)
 {
     SDL_Surface *temp;
+    SDL_Texture *sprite = NULL;
 
     /* Load the sprite image */
     temp = SDL_LoadBMP(file);
     if (temp == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s\n", file, SDL_GetError());
-        return (-1);
+        return NULL;
     }
     sprite_w = temp->w;
     sprite_h = temp->h;
@@ -254,12 +254,12 @@ LoadSprite(char *file, SDL_Renderer *renderer)
     if (!sprite) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
         SDL_FreeSurface(temp);
-        return (-1);
+        return NULL;
     }
     SDL_FreeSurface(temp);
 
     /* We're ready to roll. :) */
-    return (0);
+    return sprite;
 }
 
 
@@ -278,7 +278,13 @@ main(int argc, char *argv[])
         quit(2);
     }
 
-    if (LoadSprite("gfx/orb.bmp", renderer) < 0) {
+    if ((spr_orb = LoadSprite("gfx/orb.bmp", renderer)) == NULL) {
+        quit(2);
+    }
+    if ((mask_red = LoadSprite("gfx/orb_red.bmp", renderer)) == NULL) {
+        quit(2);
+    }
+    if ((mask_blue = LoadSprite("gfx/orb_blue.bmp", renderer)) == NULL) {
         quit(2);
     }
 
