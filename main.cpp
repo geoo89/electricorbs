@@ -17,11 +17,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
 #include <vector>
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
+
+#include "point.h"
 
 #define WINDOW_WIDTH    640
 #define WINDOW_HEIGHT   480
@@ -36,60 +37,6 @@ static SDL_Rect velocities[NUM_SPRITES];
 //TODO: figure how to get these dynamically
 static int sprite_w = 32, sprite_h = 32;
 
-
-struct point {
-    double x;
-    double y;
-
-    void reset() {
-        x = 0;
-        y = 0;
-    }
-
-    double length() {
-        return sqrt(x*x + y*y);
-    }
-};
-
-point operator-(point a) {
-    point c;
-    c.x = -a.x;
-    c.y = -a.y;
-    return c;
-}
-
-point operator+(point a, point b) {
-    point c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    return c;
-}
-
-point operator-(point a, point b) {
-    /*point c;
-    c.x = a.x - b.x;
-    c.y = a.y - b.y;
-    return c;*/
-    return a + (-b);
-}
-
-/*operator+=(point a, point b) {
-    point c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    return c;
-}*/
-
-point operator*(double scalar, point p) {
-    point c;
-    c.x = scalar * p.x;
-    c.y = scalar * p.y;
-    return c;
-}
-
-double dist(point a, point b) {
-    return (b-a).length();
-}
 
 
 
@@ -120,19 +67,19 @@ public:
 
     /* add a force vector to the force */
     void add_force(point f) {
-        force = force + f;
+        force += f;
     }
 
     /* Add the force as acceleration to the velocity and
      * reset the force to 0. */
     void reset_force() {
-        vel = vel + force;
+        vel += force;
         force.reset();
     }
 
     /* Add current velocity to position. */
     void move() {
-        pos = pos + vel;
+        pos += vel;
 
         if ((pos.x - sprite_w/2 < 0) || (pos.x + sprite_w/2 >= WINDOW_WIDTH)) {
             vel.x = -vel.x;
